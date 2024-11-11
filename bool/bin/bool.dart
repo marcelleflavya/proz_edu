@@ -12,7 +12,7 @@ void main() {
 
   bool igual = (a == b);
   bool aMaior = (a > b);
-  bool aMenor = (a < b);
+  //bool aMenor = (a < b);
 
   print(igual
       ? 'Os números são iguais'
