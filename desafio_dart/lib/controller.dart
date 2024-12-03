@@ -1,8 +1,10 @@
 import 'dart:convert';
 import 'dart:io';
-import 'package:desafio_simplificado_dart/empresa.dart';
-import 'package:desafio_simplificado_dart/socio.dart';
-import 'package:desafio_simplificado_dart/endereco.dart';
+import 'package:desafio_dart/empresa.dart';
+import 'package:desafio_dart/endereco.dart';
+import 'package:desafio_dart/socio.dart';
+import 'package:desafio_dart/sociopf.dart';
+import 'package:desafio_dart/sociopj.dart';
 
 class Controller {
   List<Empresa> informacoesEmpresas = [];
@@ -45,7 +47,7 @@ class Controller {
         cep: cep);
   }
 
-  Socio cadastroSocio() {
+  Sociopf cadastroSociopf() {
     print('Digite o nome do sócio:');
     String nome = stdin.readLineSync(encoding: utf8)!;
     String cpf;
@@ -59,7 +61,30 @@ class Controller {
       }
     }
     Endereco endereco = cadastroEndereco();
-    return Socio(nome: nome, cpf: cpf, endereco: endereco);
+    return Sociopf(nome: nome, documento: cpf, endereco: endereco);
+  }
+
+  Sociopj cadastroSociopj() {
+    print('Digite a razão social da sócio:');
+    String razaoSocialSocio = stdin.readLineSync(encoding: utf8)!;
+    print('Digite o nome fantasia do sócio:');
+    String nomeFantasiaSocio = stdin.readLineSync(encoding: utf8)!;
+    String cnpj;
+    while (true) {
+      print('Digite o CNPJ do sócio apenas números:');
+      cnpj = stdin.readLineSync(encoding: utf8)!;
+      if (cnpj.length != 14 || int.tryParse(cnpj) == null) {
+        print('CNPJ inválido. Deve ter 14 dígitos numéricos.');
+      } else {
+        break;
+      }
+    }
+    Endereco endereco = cadastroEndereco();
+    return Sociopj(
+        nomeFantasiaSocio: nomeFantasiaSocio,
+        nome: razaoSocialSocio,
+        documento: cnpj,
+        endereco: endereco);
   }
 
   void cadastroEmpresa(String razaoSocial, String nomeFantasia, String cnpj,
@@ -84,7 +109,7 @@ class Controller {
         telefone: 'Não encontrada',
         socio: Socio(
           nome: 'Não encontrada',
-          cpf: 'Não encontrada',
+          documento: 'Não encontrada',
           endereco: Endereco(
             logradouro: 'Não encontrada',
             numeroEndereco: 00,
@@ -104,16 +129,20 @@ class Controller {
         ),
       ),
     );
-    if (empresa.razaoSocial == 'Não encontrada') {
+    if (empresa.cnpj == 'Não encontrada') {
       print('O CNPJ $cnpj não corresponde a nenhuma empresa listada.');
     } else {
       print('Empresa encontrada: ${empresa.razaoSocial}');
     }
   }
 
-  void buscarEmpresaCpf(String cpf) {
+  void buscarEmpresaCpfCnpjSocio(String documento) {
+    if (informacoesEmpresas.isEmpty) {
+      print('A lista de empresas está vazia');
+      return;
+    }
     final empresa = informacoesEmpresas.firstWhere(
-      (empresa) => empresa.socio.cpf == cpf,
+      (empresa) => empresa.socio.documento == documento,
       orElse: () => Empresa(
         razaoSocial: 'Não encontrada',
         nomeFantasia: 'Não encontrada',
@@ -121,7 +150,7 @@ class Controller {
         telefone: 'Não encontrada',
         socio: Socio(
           nome: 'Não encontrada',
-          cpf: 'Não encontrada',
+          documento: 'Não encontrada',
           endereco: Endereco(
             logradouro: 'Não encontrada',
             numeroEndereco: 00,
@@ -141,8 +170,8 @@ class Controller {
         ),
       ),
     );
-    if (empresa.socio.cpf == 'Não encontrada') {
-      print('O CPF $cpf não corresponde a nenhum sócio registrado');
+    if (empresa.socio.documento == 'Não encontrada') {
+      print('O dados não correspondem a nenhum sócio registrado');
     } else {
       print('Empresa encontrada: ${empresa.razaoSocial}');
     }
@@ -171,6 +200,24 @@ class Controller {
     }
   }
 
+  String formatarSocio(Socio socio) {
+    if (socio is Sociopf) {
+      return '''
+CPF: ${formatarCpf(socio.documento)}
+Nome Completo: ${socio.nome}
+Endereço: ${socio.endereco.logradouro}, ${socio.endereco.numeroEndereco}, ${socio.endereco.bairro}, ${socio.endereco.cidade}/${socio.endereco.estado}, ${socio.endereco.cep}
+''';
+    } else if (socio is Sociopj) {
+      return '''
+CNPJ: ${formatarCnpj(socio.documento)}
+Razão Social: ${socio.nome}
+Nome Fantasia: ${socio.nomeFantasiaSocio}
+Endereço: ${socio.endereco.logradouro}, ${socio.endereco.numeroEndereco}, ${socio.endereco.bairro}, ${socio.endereco.cidade}/${socio.endereco.estado}, ${socio.endereco.cep}
+''';
+    }
+    return 'Sócio desconhecido';
+  }
+
   void mostrarLista() {
     if (informacoesEmpresas.isEmpty) {
       print('A lista de empresas está vazia.');
@@ -179,15 +226,13 @@ class Controller {
     for (var empresa in informacoesEmpresas) {
       print('''
 ID: ${empresa.id}
-CNPJ: ${formatarCnpj(empresa.cnpj)} Data Cadastro: ${empresa.date} 
+CNPJ:  ${formatarCnpj(empresa.cnpj)} Data Cadastro: ${empresa.date} 
 Razão Social: ${empresa.razaoSocial}
 Nome Fantasia: ${empresa.nomeFantasia}
 Telefone: ${empresa.telefone}
 Endereço: ${empresa.endereco.logradouro}, ${empresa.endereco.numeroEndereco}, ${empresa.endereco.bairro}, ${empresa.endereco.cidade}/${empresa.endereco.estado}, ${empresa.endereco.cep}
 Sócio: 
-CPF: ${formatarCpf(empresa.socio.cpf)}
-Nome Completo: ${empresa.socio.nome} 
-Endereço: ${empresa.socio.endereco.logradouro}, ${empresa.socio.endereco.numeroEndereco}, ${empresa.socio.endereco.bairro}, ${empresa.socio.endereco.cidade}/${empresa.socio.endereco.estado}, ${empresa.socio.endereco.cep}
+${formatarSocio(empresa.socio)}
 ''');
     }
   }

@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
-import 'package:desafio_simplificado_dart/controller.dart';
-import 'package:desafio_simplificado_dart/endereco.dart';
-import 'package:desafio_simplificado_dart/socio.dart';
+import 'package:desafio_dart/controller.dart';
+import 'package:desafio_dart/endereco.dart';
+import 'package:desafio_dart/socio.dart';
 
 class Menu {
   Controller controller = Controller();
@@ -12,9 +12,9 @@ class Menu {
 
     do {
       print('''Digite uma opção:
-1 - Cadastrar uma nova empresa:
+1 - Cadastrar uma nova empresa;
 2 - Buscar Empresa cadastrada por CNPJ;
-3 - Buscar Empresa por CPF do Sócio;
+3 - Buscar Empresa por CPF/CNPJ do Sócio;
 4 - Listar Empresas cadastradas em ordem alfabética (baseado na Razão Social);
 5 - Excluir uma empresa (por ID);
 0 - Sair.''');
@@ -23,13 +23,13 @@ class Menu {
 
       switch (input) {
         case '1':
-          _cadastroEmpresa();
+          _escolherSocio();
           break;
         case '2':
           _buscarEmpresaCnpj();
           break;
         case '3':
-          _buscarEmpresaCpf();
+          _buscarEmpresaCpfCnpjSocio();
           break;
         case '4':
           controller.listarEmpresasOrdemAlfabetica();
@@ -47,7 +47,19 @@ class Menu {
     } while (input != '0');
   }
 
-  _cadastroEmpresa() {
+  _escolherSocio() {
+    print('Digite 1 para Sócio Pessoa Física ou 2 para Sócio Pessoa jurídica:');
+    String escolherSocio = stdin.readLineSync(encoding: utf8)!;
+    Socio socio;
+    if (escolherSocio == '1') {
+      socio = controller.cadastroSociopf();
+    } else {
+      socio = controller.cadastroSociopj();
+    }
+    _cadastroEmpresa(socio);
+  }
+
+  _cadastroEmpresa(Socio socio) {
     print('Digite a razão social da empresa:');
     String razaoSocial = stdin.readLineSync(encoding: utf8)!;
     print('Digite o nome fantasia da empresa:');
@@ -73,12 +85,11 @@ class Menu {
       }
     }
     Endereco endereco = controller.cadastroEndereco();
-    Socio socio = controller.cadastroSocio();
     controller.cadastroEmpresa(
         razaoSocial, nomeFantasia, cnpj, telefone, socio, endereco);
   }
 
-  void _buscarEmpresaCnpj() {
+  _buscarEmpresaCnpj() {
     if (controller.informacoesEmpresas.isEmpty) {
       print('A lista está vazia.');
       return;
@@ -88,14 +99,14 @@ class Menu {
     controller.buscarEmpresaCnpj(cnpj);
   }
 
-  void _buscarEmpresaCpf() {
+  void _buscarEmpresaCpfCnpjSocio() {
     if (controller.informacoesEmpresas.isEmpty) {
       print('A lista está vazia.');
       return;
     }
-    print('Digite o CPF do sócio da empresa:');
-    String cpf = stdin.readLineSync(encoding: utf8)!;
-    controller.buscarEmpresaCpf(cpf);
+    print('Digite o documento do sócio com apenas números:');
+    String documento = stdin.readLineSync(encoding: utf8)!;
+    controller.buscarEmpresaCpfCnpjSocio(documento);
   }
 
   void _excluirporId() {

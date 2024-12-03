@@ -1,6 +1,6 @@
-import 'package:desafio_simplificado_dart/endereco.dart';
-import 'package:desafio_simplificado_dart/socio.dart';
 import 'package:uuid/uuid.dart';
+import 'package:desafio_dart/endereco.dart';
+import 'package:desafio_dart/socio.dart';
 
 class Empresa {
   final id = Uuid().v1();
